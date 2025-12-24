@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DiseaseAI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo">
+                <i class="fas fa-virus-slash"></i> Disease<span>AI</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="login.html" class="btn btn-outline btn-sm">Logout</a></li>
+            </ul>
+        </nav>
+
+        <section class="dashboard-container fade-in">
+            <div class="dash-hero">
+                <h1 style="font-size: 48px; margin-bottom: 20px;">Personal Health <span
+                        style="color: var(--primary);">Risk Analyzer</span></h1>
+                <p style="color: var(--text-muted); font-size: 18px; margin-bottom: 30px;">Input your metrics and
+                    symptoms below. Our AI model will analyze the data to provide a potential prognosis based on current
+                    weather patterns.</p>
+
+                <div style="display: flex; gap: 20px; margin-bottom: 40px;">
+                    <div class="stat-badge"
+                        style="padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05);">
+                        <i class="fas fa-check-circle" style="color: var(--primary);"></i> 96% Precision
+                    </div>
+                    <div class="stat-badge"
+                        style="padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05);">
+                        <i class="fas fa-database" style="color: var(--primary);"></i> Global Dataset
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="margin-bottom: 20px;"><i class="fas fa-calculator"></i> Prediction Calculator</h3>
+                <form id="prediction-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" name="Age" placeholder="e.g. 25" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select name="Gender" required>
+                                <option value="1">Male</option>
+                                <option value="0">Female</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label><i class="fas fa-thermometer-half"></i> Temp (°C)</label>
+                            <input type="number" step="0.1" name="Temperature (C)" placeholder="e.g. 24.5" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tint"></i> Humidity</label>
+                            <input type="number" step="0.01" name="Humidity" placeholder="0.0 - 1.0" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-wind"></i> Wind (km/h)</label>
+                            <input type="number" step="0.1" name="Wind Speed (km/h)" placeholder="e.g. 12.0" required>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 30px 0 15px; color: var(--text-main);">Select Symptoms</h4>
+                    <div class="symptom-grid" id="symptom-grid">
+                        <!-- Will be populated by JS -->
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="analyze-btn"
+                        style="width: 100%; margin-top: 40px; padding: 18px;">
+                        Calculate & Analyze Result <i class="fas fa-microchip"></i>
+                    </button>
+                </form>
+
+                <!-- New Results Section -->
+                <div id="result-overlay" class="glass-card fade-in"
+                    style="display: none; margin-top: 40px; border-color: var(--primary); background: rgba(0, 168, 107, 0.05);">
+                    <div style="text-align: center;">
+                        <h4 style="color: var(--primary); margin-bottom: 25px;"><i class="fas fa-search-dollar"></i>
+                            Instant AI Diagnosis</h4>
+
+                        <div style="margin-bottom: 20px;">
+                            <label
+                                style="font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);">Detected
+                                Condition</label>
+                            <div id="dash-prognosis" style="font-size: 38px; font-weight: 800; color: white;"></div>
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <label
+                                style="font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);">Prediction
+                                Accuracy</label>
+                            <div id="dash-confidence" style="font-size: 24px; color: var(--primary); font-weight: 700;">
+                            </div>
+                        </div>
+
+                        <p id="dash-summary"
+                            style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 25px; min-height: 60px;">
+                        </p>
+                        <a href="analysis.html" class="btn btn-outline" style="width: 100%;">Deep Analysis Report <i
+                                class="fas fa-microchip"></i></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // List of symptom features from our model
+        const symptoms = [
+            'nausea', 'joint_pain', 'abdominal_pain', 'high_fever', 'chills', 'fatigue',
+            'runny_nose', 'pain_behind_the_eyes', 'dizziness', 'headache', 'chest_pain',
+            'vomiting', 'cough', 'shivering', 'asthma_history', 'high_cholesterol',
+            'diabetes', 'obesity', 'hiv_aids', 'nasal_polyps', 'asthma',
+            'high_blood_pressure', 'severe_headache', 'weakness', 'trouble_seeing',
+            'fever', 'body_aches', 'sore_throat', 'sneezing', 'diarrhea',
+            'rapid_breathing', 'rapid_heart_rate', 'swollen_glands', 'rashes',
+            'sinus_headache', 'facial_pain', 'shortness_of_breath',
+            'reduced_smell_and_taste', 'skin_irritation', 'itchiness',
+            'throbbing_headache', 'confusion', 'back_pain', 'knee_ache'
+        ];
+
+        const grid = document.getElementById('symptom-grid');
+        symptoms.forEach(s => {
+            const label = s.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const div = document.createElement('div');
+            div.className = 'symptom-item';
+            div.innerHTML = `
+                <input type="checkbox" name="${s}" id="chk-${s}">
+                <label for="chk-${s}">${label}</label>
+            `;
+            div.addEventListener('click', () => {
+                const chk = div.querySelector('input');
+                chk.checked = !chk.checked;
+                div.classList.toggle('active', chk.checked);
+            });
+            grid.appendChild(div);
+        });
+
+        function typeWriter(elementId, text, speed = 50, callback = null) {
+            let i = 0;
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    callback();
+                }
+            }
+            type();
+        }
+
+        document.getElementById('prediction-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('analyze-btn');
+            btn.innerHTML = 'Processing... <i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const data = {};
+
+            symptoms.forEach(s => data[s] = 0);
+            data['Age'] = parseFloat(formData.get('Age'));
+            data['Gender'] = parseInt(formData.get('Gender'));
+            data['Temperature (C)'] = parseFloat(formData.get('Temperature (C)'));
+            data['Humidity'] = parseFloat(formData.get('Humidity'));
+            data['Wind Speed (km/h)'] = parseFloat(formData.get('Wind Speed (km/h)'));
+
+            symptoms.forEach(s => {
+                const chk = document.getElementById(`chk-${s}`);
+                if (chk && chk.checked) data[s] = 1;
+            });
+
+            try {
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data })
+                });
+                const result = await response.json();
+
+                localStorage.setItem('predictionResult', JSON.stringify(result));
+                localStorage.setItem('inputData', JSON.stringify(data));
+
+                // Show results on dashboard
+                const resultOverlay = document.getElementById('result-overlay');
+                resultOverlay.style.display = 'block';
+                resultOverlay.scrollIntoView({ behavior: 'smooth' });
+
+                typeWriter('dash-prognosis', result.prognosis, 50, () => {
+                    typeWriter('dash-confidence', `${result.confidence}% Match`, 50, () => {
+                        const summary = `System identifies a high probability of ${result.prognosis} based on your unique biometric profile and recent environmental shifts.`;
+                        typeWriter('dash-summary', summary, 20);
+                    });
+                });
+
+                btn.innerHTML = 'Analysis Complete <i class="fas fa-check"></i>';
+                btn.disabled = false;
+
+            } catch (err) {
+                console.error('Prediction Error:', err);
+                alert('Connection to prediction server failed: ' + err.message);
+                btn.innerHTML = 'Retry Analysis <i class="fas fa-redo"></i>';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

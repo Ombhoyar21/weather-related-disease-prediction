@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Report - DiseaseAI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo">
+                <i class="fas fa-virus-slash"></i> Disease<span>AI</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="#" class="active">Analysis</a></li>
+                <li><a href="login.html" class="btn btn-outline btn-sm">Logout</a></li>
+            </ul>
+        </nav>
+
+        <section class="report fade-in" style="padding-top: 40px;">
+            <div class="report-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h1>AI Diagnostic <span style="color: var(--primary);">Analysis</span></h1>
+                    <p id="report-meta" style="color: var(--text-muted);"></p>
+                </div>
+                <a href="dashboard.html" class="btn btn-outline"><i class="fas fa-plus"></i> New Analysis</a>
+            </div>
+
+            <div class="glass-card result-card"
+                style="margin-top: 30px; margin-bottom: 40px; position: relative; overflow: hidden;">
+                <div
+                    style="position: absolute; top: -10px; right: -10px; opacity: 0.05; font-size: 150px; color: var(--primary);">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <h2>AI Identification Outcome</h2>
+                <div id="prognosis-val"
+                    style="font-size: 72px; font-weight: 800; color: var(--primary); min-height: 100px;">Analyzing...
+                </div>
+
+                <div style="margin-top: -10px; margin-bottom: 20px;">
+                    <span id="confidence-val" class="confidence-badge"
+                        style="display: none; font-size: 24px; padding: 10px 20px;"></span>
+                </div>
+
+                <div id="detailed-summary"
+                    style="margin-top: 10px; color: var(--text-muted); max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.8; font-size: 15px;">
+                    <!-- Typewriter summary will go here -->
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 40px;">
+                <div class="glass-card" style="padding: 20px;">
+                    <h4 style="color: var(--primary); margin-bottom: 15px;"><i class="fas fa-thermometer-half"></i>
+                        Weather Factors</h4>
+                    <p id="weather-details" style="font-size: 14px; color: var(--text-muted);"></p>
+                </div>
+                <div class="glass-card" style="padding: 20px;">
+                    <h4 style="color: var(--primary); margin-bottom: 15px;"><i class="fas fa-user"></i> Demographic Data
+                    </h4>
+                    <p id="demo-details" style="font-size: 14px; color: var(--text-muted);"></p>
+                </div>
+                <div class="glass-card" style="padding: 20px;">
+                    <h4 style="color: var(--primary); margin-bottom: 15px;"><i class="fas fa-list-ul"></i> Symptoms
+                        Detected</h4>
+                    <ul id="symptom-list"
+                        style="font-size: 13px; color: var(--text-muted); list-style: none; padding: 0;">
+                        <!-- Symptoms will be listed here -->
+                    </ul>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px;">
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 20px;">Health Marker Analysis</h3>
+                    <canvas id="factorChart" height="200"></canvas>
+                </div>
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 20px;">Environmental Risk Weight</h3>
+                    <canvas id="impactChart" height="250"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const result = JSON.parse(localStorage.getItem('predictionResult') || '{}');
+        const inputData = JSON.parse(localStorage.getItem('inputData') || '{}');
+
+        function typeWriter(elementId, text, speed = 50, callback = null) {
+            let i = 0;
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    callback();
+                }
+            }
+            type();
+        }
+
+        if (result.prognosis) {
+            // Meta info
+            document.getElementById('report-meta').innerText = `Generated on ${new Date().toLocaleDateString()} for Patient Profile #${Math.floor(Math.random() * 10000)}`;
+
+            // Details
+            document.getElementById('weather-details').innerHTML = `Temp: ${inputData['Temperature (C)']}°C<br>Humidity: ${inputData.Humidity * 100}%<br>Wind: ${inputData['Wind Speed (km/h)']} km/h`;
+            document.getElementById('demo-details').innerHTML = `Age: ${inputData.Age}<br>Gender: ${inputData.Gender == 1 ? 'Male' : 'Female'}`;
+
+            // Typewriter effect for prognosis
+            setTimeout(() => {
+                typeWriter('prognosis-val', result.prognosis, 100, () => {
+                    const confidenceBadge = document.getElementById('confidence-val');
+                    confidenceBadge.innerText = `${result.confidence}% Probability Match`;
+                    confidenceBadge.style.display = 'inline-block';
+                    confidenceBadge.classList.add('fade-in');
+
+                    const activeSymptomsCount = Object.keys(inputData).filter(k => inputData[k] === 1 && !['Age', 'Gender', 'Temperature (C)', 'Humidity', 'Wind Speed (km/h)'].includes(k)).length;
+                    const summary = `Advanced diagnostic protocols indicate a ${result.confidence}% alignment with ${result.prognosis}. This analysis integrates ${activeSymptomsCount} biological markers and local environmental data (Temp: ${inputData['Temperature (C)']}°C, Humidity: ${Math.round(inputData.Humidity * 100)}%).`;
+                    typeWriter('detailed-summary', summary, 20);
+                });
+            }, 500);
+
+            // Populate symptoms
+            const symptomList = document.getElementById('symptom-list');
+            const activeSymptoms = Object.keys(inputData).filter(k => inputData[k] === 1 && !['Age', 'Gender', 'Temperature (C)', 'Humidity', 'Wind Speed (km/h)'].includes(k));
+            if (activeSymptoms.length > 0) {
+                activeSymptoms.forEach(s => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<i class="fas fa-check" style="color: var(--primary); margin-right: 8px;"></i> ${s.replace(/_/g, ' ').toUpperCase()}`;
+                    symptomList.appendChild(li);
+                });
+            } else {
+                symptomList.innerHTML = '<li>No specific symptoms selected.</li>';
+            }
+        }
+
+        // Charts (same as before but updated)
+        const ctxFactors = document.getElementById('factorChart').getContext('2d');
+        new Chart(ctxFactors, {
+            type: 'bar',
+            data: {
+                labels: ['Temp', 'Humidity', 'Wind Speed', 'Symptom Count'],
+                datasets: [{
+                    label: 'Magnitude',
+                    data: [inputData['Temperature (C)'], inputData.Humidity * 100, inputData['Wind Speed (km/h)'], Object.keys(inputData).filter(k => inputData[k] === 1).length * 10],
+                    backgroundColor: ['#00a86b', '#36a2eb', '#ffce56', '#eb3b5a'],
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        const ctxImpact = document.getElementById('impactChart').getContext('2d');
+        new Chart(ctxImpact, {
+            type: 'doughnut',
+            data: {
+                labels: ['Environmental', 'Physiological', 'Symptomatic'],
+                datasets: [{
+                    data: [40, 30, 30],
+                    backgroundColor: ['#00a86b', '#a55eea', '#4b7bec'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom', labels: { color: '#a0a0a0' } } },
+                cutout: '70%'
+            }
+        });
+    </script>
+</body>
+
+</html>
